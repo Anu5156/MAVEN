@@ -52,5 +52,53 @@ Hello World!
 - Apache Maven 3.9.x
 - JUnit 5
 
+## Day 2: Understanding pom.xml
+
+### What I learned
+- **GAV** (`groupId:artifactId:version`) uniquely identifies every artifact in the Maven world
+- **SNAPSHOT** = in development and can change; release versions (like `1.0`) are immutable
+- **`<properties>`** act as variables: `<commons.lang.version>3.17.0</commons.lang.version>` is used as `${commons.lang.version}`
+- **`<dependencyManagement>`** only declares versions; **`<dependencies>`** actually adds libraries
+- A **BOM** (Bill of Materials), like `junit-bom`, keeps a family of libraries on compatible versions
+- **`<pluginManagement>`** pins plugin versions so builds are reproducible
+- `mvn dependency:tree` shows every dependency; `mvn help:effective-pom` shows the full resolved POM
+
+### The dependency I added
+```xml
+<dependency>
+  <groupId>org.apache.commons</groupId>
+  <artifactId>commons-lang3</artifactId>
+  <version>${commons.lang.version}</version>
+</dependency>
+```
+
+### The trap 🪤
+```bash
+java -cp target/pom-basics-1.0-SNAPSHOT.jar com.anushka.App
+```
+❌ `NoClassDefFoundError: org/apache/commons/lang3/StringUtils`, because a normal JAR contains **only my code, not its dependencies**.
+
+### How to run
+```bash
+cd pom-basics
+mvn compile
+mvn exec:java "-Dexec.mainClass=com.anushka.App"
+```
+**Output:**
+```
+Capitalized: Google
+Reversed:    elgoog
+Is blank?    true
+```
+> 💡 In PowerShell, wrap `-D` arguments in quotes, because PowerShell splits them at the dot.
+
+---
+
+## 🛠️ Tech
+- Java 17+
+- Apache Maven 3.9.x
+- JUnit 5
+- Apache Commons Lang 3
+
 ## 🎯 Coming next
-Day 2: understanding `pom.xml` line by line
+Day 3: the Maven build lifecycle (`clean`, `validate`, `compile`, `test`, `package`, `verify`, `install`)
