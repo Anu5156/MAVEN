@@ -10,6 +10,7 @@ My day-by-day journey learning **Apache Maven** from scratch, one concept and on
 | 2 | `pom.xml` anatomy, GAV, properties, dependencies, BOM | [pom-basics](./pom-basics) |
 | 3 | Build lifecycle, JUnit 5 tests, dependency scopes | [lifecycle-demo](./lifecycle-demo) |
 | 4 | Transitive dependencies, version conflicts, BOM fix, exclusions | [dependency-demo](./dependency-demo) |
+| 5 | Plugins, executions, manifest, fat JAR with maven-shade-plugin | [java-packaging](./java-packaging) |
 
 ---
 
@@ -227,5 +228,98 @@ mvn dependency:analyze
 - Jackson 2.18.x
 - Google Guava 33.3.1
 
-## 🎯 Coming next
-Day 5: Plugins — building an executable fat JAR with `maven-shade-plugin`
+## Day 5: Plugins & the Fat JAR
+
+### What I learned
+- **Plugins do all the work** in Maven; each plugin has **goals** bound to lifecycle **phases**
+- `<pluginManagement>` pins versions only; `<build><plugins>` actually uses or configures plugins
+  (same idea as `dependencyManagement` vs `dependencies`)
+- `<configuration>` = plugin settings; `<executions>` = run a goal automatically during a `<phase>`
+- If a plugin's version is already pinned in `<pluginManagement>`, it can be used without `<version>`
+- Official plugins use `groupId` `org.apache.maven.plugins` (optional to write); others like `org.codehaus.mojo` need it
+- `java -jar` reads `META-INF/MANIFEST.MF` to find the `Main-Class`
+- A normal jar has **no dependencies** inside; a **fat (uber) jar** bundles my code **plus all dependencies**
+- **Plugin prefixes**: `exec:java` → `exec-maven-plugin`, `dependency:tree` → `maven-dependency-plugin`
+- `mvn help:describe "-Dplugin=shade"` lists a plugin's goals
+
+### The two errors I fixed 🐛
+| Error | Cause | Fix |
+|---|---|---|
+| `no main manifest attribute` | Manifest has no `Main-Class` | Set `<mainClass>` (jar plugin / shade transformer) |
+| `NoClassDefFoundError: .../ObjectMapper` | Jackson not inside the jar | Build a fat jar with `maven-shade-plugin` |
+
+### Key part of the `pom.xml`
+```xml
+<build>
+  <pluginManagement>
+    <!-- versions only -->
+  </pluginManagement>
+
+  <plugins>   <!-- plugins actually used: AFTER pluginManagement, not inside it -->
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-shade-plugin</artifactId>
+      <version>3.6.0</version>
+      <executions>
+        <execution>
+          <phase>package</phase>
+          <goals><goal>shade</goal></goals>
+          <configuration>
+            <createDependencyReducedPom>false</createDependencyReducedPom>
+            <transformers>
+              <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <mainClass>com.anushka.App</mainClass>
+              </transformer>
+            </transformers>
+            <filters>
+              <filter>
+                <artifact>*:*</artifact>
+                <excludes>
+                  <exclude>module-info.class</exclude>
+                  <exclude>META-INF/*.SF</exclude>
+                  <exclude>META-INF/*.DSA</exclude>
+                  <exclude>META-INF/*.RSA</exclude>
+                </excludes>
+              </filter>
+            </filters>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+
+    <plugin>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>exec-maven-plugin</artifactId>
+      <version>3.5.0</version>
+      <configuration>
+        <mainClass>com.anushka.App</mainClass>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+```
+
+### How to run
+```bash
+cd java-packaging
+mvn clean package
+java -jar target/java-packaging-1.0-SNAPSHOT.jar   # no Maven needed to run it!
+mvn compile exec:java                              # mainClass configured in the pom
+```
+
+**Output:**
+```
+{"name":"Anushka","dreamCompanies":["Google","Amazon","Microsoft"]}
+```
+
+| Jar in `target/` | Size | Contents |
+|---|---|---|
+| `original-java-packaging-1.0-SNAPSHOT.jar` | KB | only my code |
+| `java-packaging-1.0-SNAPSHOT.jar` | MB | my code + Jackson + Guava 🍔 |
+
+### Real-world notes
+- `maven-assembly-plugin` can also build fat jars; Shade can additionally **relocate** packages to avoid conflicts
+- Spring Boot apps use `spring-boot-maven-plugin` for their executable jars
+- Fat jars are for **apps** (CLI tools, microservices), not for **libraries** others depend on
+
+---
