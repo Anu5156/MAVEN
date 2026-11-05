@@ -153,6 +153,74 @@ Scope decides which classpath a dependency is on:
 - `<identifier> expected` is a **Java syntax error**, not a Maven problem
 - `.gitignore` doesn't untrack files that are already committed → `git rm -r --cached <folder>`
 
-## 🎯 Coming next
-Day 4: transitive dependencies, dependency conflicts, and exclusions
+Day 4: Transitive Dependencies & Conflicts
+What I learned
+Transitive dependencies: dependencies of my dependencies are downloaded automatically (I declared 2 libraries, and mvn dependency:tree showed about 10)
+Only compile and runtime scoped dependencies are passed on; test and provided are not
+Dependency mediation decides which version wins in a conflict:
+Nearest wins: the version closest to my project in the tree
+Tie → first declared wins in the pom
+Maven does NOT pick the newest version; a wrong version can cause NoSuchMethodError at runtime
+Three ways to fix a conflict:
+declare the dependency directly (depth 1 always wins)
+pin it with <dependencyManagement> / a BOM ✅ (best practice)
+remove it with <exclusions>
+All jars live in ~/.m2/repository/<groupId>/<artifactId>/<version>/, shared across projects
+mvn -o = offline mode, mvn -U = force update of SNAPSHOTs
+pom.xml rules I learned 📋
+Each section (<properties>, <dependencyManagement>, <dependencies>, <build>) appears only once
+Each library is declared only once
+...Management blocks = versions only; plain blocks = actually used
+BOMs have a version (<type>pom</type> + <scope>import</scope>); libraries managed by a BOM don't
+An <exclusion> has only groupId + artifactId, with no version
+What I built
+Serialized a Java record to JSON using Jackson, with an ImmutableList from Google Guava
+Created a conflict on purpose (jackson-core 2.15.0 vs 2.18.0) and saw "nearest wins" in the verbose tree
+Fixed it with jackson-bom 2.18.0, so all Jackson modules stay on the same version
+Excluded j2objc-annotations (only needed for iOS builds) from Guava
+Key part of the pom
+xml
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.jackson</groupId>
+      <artifactId>jackson-bom</artifactId>
+      <version>2.18.0</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+
+<dependencies>
+  <dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>   <!-- version comes from the BOM -->
+  </dependency>
+  <dependency>
+    <groupId>com.google.guava</groupId>
+    <artifactId>guava</artifactId>
+    <version>33.3.1-jre</version>
+    <exclusions>
+      <exclusion>
+        <groupId>com.google.j2objc</groupId>
+        <artifactId>j2objc-annotations</artifactId>
+      </exclusion>
+    </exclusions>
+  </dependency>
+</dependencies>
+How to run
+bash
+cd dependency-demo
+mvn clean compile exec:java "-Dexec.mainClass=com.anushka.App"
+mvn dependency:tree
+mvn dependency:tree "-Dverbose" "-Dincludes=com.fasterxml.jackson.core"
+mvn dependency:analyze
+
+Output:
+
+{"name":"Anushka","dreamCompanies":["Google","Amazon","Microsoft"]}
+🎯 Coming next
+
+Day 5: Plugins: building an executable fat JAR with maven-shade-plugin
 
