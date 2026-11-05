@@ -7,6 +7,9 @@ My day-by-day journey learning **Apache Maven** from scratch, one concept and on
 | Day | Topic | Folder |
 |-----|-------|--------|
 | 1 | Setup, first project, standard layout, `mvn package` | [hello-maven](./hello-maven) |
+| 2 | `pom.xml` anatomy, GAV, properties, dependencies, BOM | [pom-basics](./pom-basics) |
+| 3 | Build lifecycle, JUnit 5 tests, dependency scopes | [lifecycle-demo](./lifecycle-demo) |
+| 4 | Transitive dependencies, version conflicts, BOM fix, exclusions | [dependency-demo](./dependency-demo) |
 
 ---
 
@@ -47,14 +50,7 @@ Hello World!
 
 ---
 
-## 🛠️ Tech
-- Java 17+
-- Apache Maven 3.9.x
-- JUnit 5
-
-## Day 2: Understanding pom.xml
-
-  | 2 | pom.xml anatomy, GAV, properties, dependencies, BOM | [pom-basics](./pom-basics) |
+## Day 2: Understanding `pom.xml`
 
 ### What I learned
 - **GAV** (`groupId:artifactId:version`) uniquely identifies every artifact in the Maven world
@@ -96,16 +92,6 @@ Is blank?    true
 
 ---
 
-## 🛠️ Tech
-- Java 17+
-- Apache Maven 3.9.x
-- JUnit 5
-- Apache Commons Lang 3
-
-## 🎯 Coming next
-Day 3: the Maven build lifecycle (`clean`, `validate`, `compile`, `test`, `package`, `verify`, `install`)
-
-
 ## Day 3: The Build Lifecycle
 
 ### What I learned
@@ -127,8 +113,8 @@ Day 3: the Maven build lifecycle (`clean`, `validate`, `compile`, `test`, `packa
 ### How to run
 ```bash
 cd lifecycle-demo
-mvn clean install                          # build + run all tests
-mvn test "-Dtest=CalculatorTest"           # run one test class
+mvn clean install                              # build + run all tests
+mvn test "-Dtest=CalculatorTest"               # run one test class
 mvn test "-Dtest=CalculatorTest#addsNumbers"   # run one test method
 java -cp target/lifecycle-demo-1.0-SNAPSHOT.jar com.anushka.App
 ```
@@ -153,33 +139,39 @@ Scope decides which classpath a dependency is on:
 - `<identifier> expected` is a **Java syntax error**, not a Maven problem
 - `.gitignore` doesn't untrack files that are already committed → `git rm -r --cached <folder>`
 
-Day 4: Transitive Dependencies & Conflicts
-What I learned
-Transitive dependencies: dependencies of my dependencies are downloaded automatically (I declared 2 libraries, and mvn dependency:tree showed about 10)
-Only compile and runtime scoped dependencies are passed on; test and provided are not
-Dependency mediation decides which version wins in a conflict:
-Nearest wins: the version closest to my project in the tree
-Tie → first declared wins in the pom
-Maven does NOT pick the newest version; a wrong version can cause NoSuchMethodError at runtime
-Three ways to fix a conflict:
-declare the dependency directly (depth 1 always wins)
-pin it with <dependencyManagement> / a BOM ✅ (best practice)
-remove it with <exclusions>
-All jars live in ~/.m2/repository/<groupId>/<artifactId>/<version>/, shared across projects
-mvn -o = offline mode, mvn -U = force update of SNAPSHOTs
-pom.xml rules I learned 📋
-Each section (<properties>, <dependencyManagement>, <dependencies>, <build>) appears only once
-Each library is declared only once
-...Management blocks = versions only; plain blocks = actually used
-BOMs have a version (<type>pom</type> + <scope>import</scope>); libraries managed by a BOM don't
-An <exclusion> has only groupId + artifactId, with no version
-What I built
-Serialized a Java record to JSON using Jackson, with an ImmutableList from Google Guava
-Created a conflict on purpose (jackson-core 2.15.0 vs 2.18.0) and saw "nearest wins" in the verbose tree
-Fixed it with jackson-bom 2.18.0, so all Jackson modules stay on the same version
-Excluded j2objc-annotations (only needed for iOS builds) from Guava
-Key part of the pom
-xml
+---
+
+## Day 4: Transitive Dependencies & Conflicts
+
+### What I learned
+- **Transitive dependencies**: dependencies of my dependencies are downloaded automatically (I declared 2 libraries, and `mvn dependency:tree` showed about 10)
+- Only `compile` and `runtime` scoped dependencies are passed on; `test` and `provided` are not
+- **Dependency mediation** decides which version wins in a conflict:
+  - **Nearest wins**: the version closest to my project in the tree
+  - **Tie → first declared wins** in the pom
+  - Maven does **NOT** pick the newest version; a wrong version can cause `NoSuchMethodError` at runtime
+- Three ways to fix a conflict:
+  1. Declare the dependency directly (depth 1 always wins)
+  2. Pin it with `<dependencyManagement>` / a BOM ✅ (best practice)
+  3. Remove it with `<exclusions>`
+- All jars live in `~/.m2/repository/<groupId>/<artifactId>/<version>/`, shared across projects
+- `mvn -o` = offline mode, `mvn -U` = force update of SNAPSHOTs
+
+### `pom.xml` rules I learned 📋
+- Each section (`<properties>`, `<dependencyManagement>`, `<dependencies>`, `<build>`) appears only **once**
+- Each library is declared only **once**
+- `...Management` blocks = versions only; plain blocks = actually used
+- BOMs have a version (`<type>pom</type>` + `<scope>import</scope>`); libraries managed by a BOM don't
+- An `<exclusion>` has only `groupId` + `artifactId`, with no version
+
+### What I built
+- Serialized a Java record to JSON using **Jackson**, with an `ImmutableList` from **Google Guava**
+- Created a conflict on purpose (`jackson-core 2.15.0` vs `2.18.0`) and saw "nearest wins" in the verbose tree
+- Fixed it with `jackson-bom 2.18.0`, so all Jackson modules stay on the same version
+- Excluded `j2objc-annotations` (only needed for iOS builds) from Guava
+
+### Key part of the `pom.xml`
+```xml
 <dependencyManagement>
   <dependencies>
     <dependency>
@@ -209,18 +201,31 @@ xml
     </exclusions>
   </dependency>
 </dependencies>
-How to run
-bash
+```
+
+### How to run
+```bash
 cd dependency-demo
 mvn clean compile exec:java "-Dexec.mainClass=com.anushka.App"
 mvn dependency:tree
 mvn dependency:tree "-Dverbose" "-Dincludes=com.fasterxml.jackson.core"
 mvn dependency:analyze
+```
 
-Output:
-
+**Output:**
+```
 {"name":"Anushka","dreamCompanies":["Google","Amazon","Microsoft"]}
-🎯 Coming next
+```
 
-Day 5: Plugins: building an executable fat JAR with maven-shade-plugin
+---
 
+## 🛠️ Tech
+- Java 17+
+- Apache Maven 3.9.x
+- JUnit 5
+- Apache Commons Lang 3
+- Jackson 2.18.x
+- Google Guava 33.3.1
+
+## 🎯 Coming next
+Day 5: Plugins — building an executable fat JAR with `maven-shade-plugin`
