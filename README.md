@@ -323,3 +323,7 @@ mvn compile exec:java                              # mainClass configured in the
 - Fat jars are for **apps** (CLI tools, microservices), not for **libraries** others depend on
 
 ---
+
+## 🎯 Coming next
+Day 6: Testing in depth: Surefire, test reports, and code coverage with JaCoCo
+
