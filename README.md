@@ -11,6 +11,7 @@ My day-by-day journey learning **Apache Maven** from scratch, one concept and on
 | 3 | Build lifecycle, JUnit 5 tests, dependency scopes | [lifecycle-demo](./lifecycle-demo) |
 | 4 | Transitive dependencies, version conflicts, BOM fix, exclusions | [dependency-demo](./dependency-demo) |
 | 5 | Plugins, executions, manifest, fat JAR with maven-shade-plugin | [java-packaging](./java-packaging) |
+| 6 | Unit vs integration tests, Surefire, Failsafe, JaCoCo coverage gate | [java-testing](./java-testing) |
 
 ---
 
@@ -324,6 +325,83 @@ mvn compile exec:java                              # mainClass configured in the
 
 ---
 
-## 🎯 Coming next
-Day 6: Testing in depth: Surefire, test reports, and code coverage with JaCoCo
+## Day 6: Testing Like a Google Engineer 🧪
 
+### What I learned
+- **Unit tests** (`*Test.java`) run with **Surefire** in the `test` phase: fast, one class at a time
+- **Integration tests** (`*IT.java`) run with **Failsafe** in `integration-test` + `verify`
+- Maven picks the plugin **by file name**: a test named `CalculatorCheck.java` would never run!
+- Failsafe records failures in `integration-test` and fails the build only in `verify`, so `post-integration-test` cleanup always runs
+- **JaCoCo** measures code coverage: 🟢 covered, 🔴 missed, 🟡 partially covered branches
+- `prepare-agent` attaches the JaCoCo agent; `report` writes HTML; `check` enforces a minimum (a **quality gate**)
+- Multiple executions of one plugin each need a unique `<id>`
+- `src/test/resources` files are copied to `target/test-classes` and loaded with `getResourceAsStream`
+- 100% coverage ≠ bug-free: it shows which lines ran, not whether they were checked correctly
+
+### JUnit 5 features I used
+| Feature | Purpose |
+|---|---|
+| `@ParameterizedTest` + `@CsvSource` | One test method, many input rows |
+| `@DisplayName` | Readable test names |
+| `assertThrows` | Verify exceptions (and their messages) |
+| `assertEquals(expected, actual, 0.001)` | Compare doubles with a tolerance |
+| Boundary values (`8.5`, `8.49`) | Test right at the edge of a condition |
+
+### What I built
+- `GradeCalculator`: grade → points (O=10 … F=0), credit-weighted **CGPA**, distinction check
+- `GradeCalculatorTest`: unit tests including parameterized and exception tests
+- `GradeCalculatorIT`: integration test reading `semester1.csv` from test resources (CGPA 8.69)
+- A JaCoCo rule requiring **≥ 90% line coverage**: the build failed until I tested every branch
+
+### Key part of the `pom.xml`
+```xml
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-failsafe-plugin</artifactId>
+  <version>3.5.2</version>
+  <executions>
+    <execution>
+      <goals><goal>integration-test</goal><goal>verify</goal></goals>
+    </execution>
+  </executions>
+</plugin>
+
+<plugin>
+  <groupId>org.jacoco</groupId>
+  <artifactId>jacoco-maven-plugin</artifactId>
+  <version>0.8.15</version>
+  <executions>
+    <execution><id>prepare-agent</id><goals><goal>prepare-agent</goal></goals></execution>
+    <execution><id>report</id><phase>test</phase><goals><goal>report</goal></goals></execution>
+    <execution>
+      <id>check</id>
+      <goals><goal>check</goal></goals>
+      <configuration>
+        <rules>
+          <rule>
+            <element>BUNDLE</element>
+            <limits>
+              <limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.90</minimum></limit>
+            </limits>
+          </rule>
+        </rules>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+```
+
+### How to run
+```bash
+cd java-testing
+mvn clean test                     # unit tests + coverage report
+mvn clean verify                   # unit + integration tests + coverage gate
+start target\site\jacoco\index.html   # open coverage report (Windows)
+mvn verify "-DskipITs"             # skip integration tests
+```
+**Output:** `BUILD SUCCESS` with ≥ 90% line coverage; the app prints `CGPA: 9.1 (Distinction)`
+
+---
+
+## 🎯 Coming next
+Day 7: Multi-module projects: parent POMs, inheritance, and the reactor
