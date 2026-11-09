@@ -12,6 +12,7 @@ My day-by-day journey learning **Apache Maven** from scratch, one concept and on
 | 4 | Transitive dependencies, version conflicts, BOM fix, exclusions | [dependency-demo](./dependency-demo) |
 | 5 | Plugins, executions, manifest, fat JAR with maven-shade-plugin | [java-packaging](./java-packaging) |
 | 6 | Unit vs integration tests, Surefire, Failsafe, JaCoCo coverage gate | [java-testing](./java-testing) |
+| 7 | Multi-module project: parent POM, modules, inheritance, reactor | [multi-module-project](./multi-module-project) |
 
 ---
 
@@ -403,5 +404,39 @@ mvn verify "-DskipITs"             # skip integration tests
 
 ---
 
+## Day 7: Multi-Module Projects 🏗️
+
+### What I learned
+- A **parent POM** has `<packaging>pom</packaging>`: it holds shared rules and has no code
+- **`<modules>`** (in the parent) lists the children by folder name, so one command builds them all
+- **`<parent>`** (in the child) inherits groupId, version, properties and dependencies
+- Each child needs only its own **`artifactId`**
+- JUnit added **once** in the parent was available in every child
+- A module can **depend on another module** (`greeting-app` → `greeting-core`)
+- The **reactor** builds in dependency order: core first, even though I listed the app first
+- If a module fails, modules that depend on it are **SKIPPED**
+- `mvn test -pl greeting-core` builds only one module
+
+### Structure
+```
+multi-module-project/     (parent, packaging: pom)
+├── greeting-core/        (Greeter + tests)
+└── greeting-app/         (App, depends on greeting-core)
+```
+
+### How to run
+```bash
+cd multi-module-project
+mvn clean install
+java -cp "greeting-app/target/classes;greeting-core/target/classes" com.anushka.app.App
+```
+**Output:**
+```
+Hello, Anushka!
+Hello, stranger!
+```
+
+---
+
 ## 🎯 Coming next
-Day 7: Multi-module projects: parent POMs, inheritance, and the reactor
+Day 8: CI/CD: automatic builds on every push with GitHub Actions
