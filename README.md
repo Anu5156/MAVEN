@@ -1,6 +1,8 @@
 # Learning Maven 🚀
+[![Maven CI](https://github.com/Anu5156/MAVEN/actions/workflows/maven.yml/badge.svg)](https://github.com/Anu5156/MAVEN/actions/workflows/maven.yml)
 
 My day-by-day journey learning **Apache Maven** from scratch, one concept and one project per day.
+
 
 ## 📅 Progress
 
