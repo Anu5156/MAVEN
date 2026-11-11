@@ -1,0 +1,48 @@
+name: Maven CI
+
+# ⏰ WHEN to run
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:        # adds a manual "Run workflow" button
+
+jobs:
+  build:
+    name: Build ${{ matrix.project }}
+    runs-on: ubuntu-latest
+
+    # 🔁 Run this job once for EACH project, all at the same time
+    strategy:
+      fail-fast: false      # if one project fails, keep building the others
+      matrix:
+        project:
+          - hello-maven
+          - pom-basics
+          - lifecycle-demo
+          - dependency-demo
+          - java-packaging
+          - java-testing
+          - multi-module-project
+          - basic-application
+          - web-app-creation
+
+    # 📁 Run every command INSIDE that project's folder
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build and test
+        run: mvn -B -ntp verify

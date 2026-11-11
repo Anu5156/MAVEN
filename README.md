@@ -13,6 +13,7 @@ My day-by-day journey learning **Apache Maven** from scratch, one concept and on
 | 5 | Plugins, executions, manifest, fat JAR with maven-shade-plugin | [java-packaging](./java-packaging) |
 | 6 | Unit vs integration tests, Surefire, Failsafe, JaCoCo coverage gate | [java-testing](./java-testing) |
 | 7 | Multi-module project: parent POM, modules, inheritance, reactor | [multi-module-project](./multi-module-project) |
+| 8 | CI with GitHub Actions: workflow, jobs, matrix builds, caching, badge | [.github/workflows](./.github/workflows) |
 
 ---
 
@@ -438,5 +439,57 @@ Hello, stranger!
 
 ---
 
+## Day 8: CI with GitHub Actions 🤖
+
+### What I learned
+- **CI (Continuous Integration)** builds and tests every push on a **fresh machine**, so it catches "works on my machine" bugs
+- A **workflow** lives in `.github/workflows/*.yml`
+- Vocabulary: **trigger** (`on:`), **job**, **runner** (`ubuntu-latest`), **step**, **action** (`uses:`)
+- A **matrix** runs the same job for many values: here, **9 projects in parallel**
+- `fail-fast: false` keeps the other jobs running when one fails
+- `actions/setup-java` with `cache: maven` caches `~/.m2`, so builds get faster
+- `mvn -B -ntp verify`: batch mode, no download noise, full lifecycle up to `verify`
+- **Branch → Pull Request → CI check → merge**: broken code is blocked before it reaches `main`
+- YAML: indentation is structure, spaces only (no tabs)
+
+### The workflow
+```yaml
+name: Maven CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [hello-maven, pom-basics, lifecycle-demo, dependency-demo,
+                  java-packaging, java-testing, multi-module-project,
+                  basic-application, web-app-creation]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: mvn -B -ntp verify
+```
+
+### What I tried
+- Pushed → watched 9 jobs run in parallel in the **Actions** tab
+- Opened a PR with a deliberately broken test → CI turned ❌ and blocked it → closed the PR without merging
+
+---
+
 ## 🎯 Coming next
-Day 8: CI/CD: automatic builds on every push with GitHub Actions
+Day 9: Maven Wrapper, profiles, and the Google-style Maven interview round 🎤
