@@ -27,7 +27,7 @@ jobs:
           - multi-module-project
           - basic-application
           - web-app-creation
-
+          - maven-profiles
     # 📁 Run every command INSIDE that project's folder
     defaults:
       run:

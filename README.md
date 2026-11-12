@@ -14,6 +14,7 @@ My day-by-day journey learning **Apache Maven** from scratch, one concept and on
 | 6 | Unit vs integration tests, Surefire, Failsafe, JaCoCo coverage gate | [java-testing](./java-testing) |
 | 7 | Multi-module project: parent POM, modules, inheritance, reactor | [multi-module-project](./multi-module-project) |
 | 8 | CI with GitHub Actions: workflow, jobs, matrix builds, caching, badge | [.github/workflows](./.github/workflows) |
+| 9 | Maven Wrapper (mvnw), profiles, activation, resource filtering | [maven-profiles](./maven-profiles) |
 
 ---
 
@@ -491,5 +492,41 @@ jobs:
 
 ---
 
+## Day 9: Maven Wrapper & Profiles 🎛️
+
+### Maven Wrapper
+- `mvnw` / `mvnw.cmd` + `.mvn/wrapper/maven-wrapper.properties` pin the **Maven version per project**
+- New developers and CI don't need Maven installed: `./mvnw clean verify`
+- Generated with `mvn wrapper:wrapper "-Dmaven=3.9.11"` (added to `multi-module-project`)
+- On Windows, mark it executable for Linux CI: `git update-index --chmod=+x mvnw`
+
+### Resource filtering
+- Without filtering, Maven copies resources as-is, so the app printed `${app.env}` literally 🪤
+- `<filtering>true</filtering>` replaces `${...}` while copying `src/main/resources` → `target/classes`
+- The source file keeps the placeholders; only the built copy gets real values
+
+### Profiles
+- A **profile** = a named set of overrides inside one pom (properties, dependencies, plugins)
+- Default values live in `<properties>`; a profile replaces them while it is ON
+- Activate by hand: `-Pdev`, `-Pprod`
+- Activate automatically with `<activation>`: my `ci` profile turns on when the env variable `CI` exists (GitHub Actions sets `CI=true`)
+- `mvn help:active-profiles` shows which profiles are on
+- `-q` (quiet) hides Maven's `[INFO]` logs
+
+### How to run
+```bash
+cd maven-profiles
+mvn -q clean compile exec:java "-Dexec.mainClass=com.anushka.App"          # Environment : local
+mvn -q clean compile exec:java "-Dexec.mainClass=com.anushka.App" -Pdev    # Environment : dev
+mvn -q clean compile exec:java "-Dexec.mainClass=com.anushka.App" -Pprod   # Environment : prod
+```
+Simulating CI on Windows:
+```powershell
+$env:CI = "true"
+mvn help:active-profiles        # - ci
+Remove-Item Env:CI
+```
+
+---
 ## 🎯 Coming next
-Day 9: Maven Wrapper, profiles, and the Google-style Maven interview round 🎤
+Day 10 (final): The Google-style Maven interview round 🎤
