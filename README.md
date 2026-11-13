@@ -1,4 +1,5 @@
 # Learning Maven 🚀
+   [![Maven CI](https://github.com/Anu5156/MAVEN/actions/workflows/maven.yml/badge.svg)](https://github.com/Anu5156/MAVEN/actions/workflows/maven.yml)
 
 My day-by-day journey learning **Apache Maven** from scratch, one concept and one project per day.
 
@@ -15,6 +16,9 @@ My day-by-day journey learning **Apache Maven** from scratch, one concept and on
 | 7 | Multi-module project: parent POM, modules, inheritance, reactor | [multi-module-project](./multi-module-project) |
 | 8 | CI with GitHub Actions: workflow, jobs, matrix builds, caching, badge | [.github/workflows](./.github/workflows) |
 | 9 | Maven Wrapper (mvnw), profiles, activation, resource filtering | [maven-profiles](./maven-profiles) |
+| 10 | Interview prep: rapid-fire quiz, scenario questions, cheat sheet | [INTERVIEW_NOTES.md](./INTERVIEW_NOTES.md) |
+| 🧪 | Practice: basic app with JUnit 5 tests (built on my own) | [basic-application](./basic-application) |
+| 🧪 | Practice: web application packaged as a WAR (built on my own) | [web-app-creation](./web-app-creation) |
 
 ---
 
@@ -528,5 +532,35 @@ Remove-Item Env:CI
 ```
 
 ---
+## Day 10: Interview Prep 🎤
+
+### What I did
+- Took a **10-question rapid-fire quiz** covering Days 1–9 (lifecycle, mediation, scopes, test naming, manifests, reactor, wrapper, filtering)
+- Practised **Google-style scenario questions**: debugging a `NoSuchMethodError`, designing the Maven build for a distributed system, and explaining `mvn clean install` end to end
+- Wrote a revision cheat sheet: **[INTERVIEW_NOTES.md](./INTERVIEW_NOTES.md)**
+
+---
+
+## 🎓 Course Complete: What I Can Do Now
+- Create, build, test and package Java projects with **Maven**
+- Read and write a `pom.xml`: GAV, properties, dependencies, scopes, BOMs, plugins
+- Debug dependency conflicts with `dependency:tree` and fix them with BOMs and exclusions
+- Ship runnable **fat JARs** with `maven-shade-plugin`
+- Separate **unit and integration tests** (Surefire / Failsafe) and enforce coverage with **JaCoCo**
+- Structure **multi-module** projects with a parent POM and the reactor
+- Run **CI on every push** with GitHub Actions (matrix of 10 projects)
+- Pin Maven with the **wrapper** and switch environments with **profiles**
+
+## 🛠️ Tech
+- Java 17+
+- Apache Maven 3.9.x
+- JUnit 5
+- Apache Commons Lang 3
+- Jackson 2.18.x
+- Google Guava 33.3.1
+- maven-shade-plugin, exec-maven-plugin
+- Maven Surefire & Failsafe, JaCoCo
+- GitHub Actions, Maven Wrapper
+
 ## 🎯 Coming next
-Day 10 (final): The Google-style Maven interview round 🎤
+Building real projects with these skills, starting with **grade-cli**: a CGPA command-line tool with tests, coverage, a fat JAR and CI.
