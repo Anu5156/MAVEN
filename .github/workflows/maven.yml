@@ -28,6 +28,7 @@ jobs:
           - basic-application
           - web-app-creation
           - maven-profiles
+          - project-works/Student_Grade_CLI/Student-Grade-CLI
     # 📁 Run every command INSIDE that project's folder
     defaults:
       run:
